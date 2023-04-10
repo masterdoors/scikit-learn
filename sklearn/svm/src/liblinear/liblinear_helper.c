@@ -15,11 +15,9 @@
  *
  * If bias is > 0, we append an item at the end.
  */
-static struct feature_node **dense_to_sparse(char *x, int double_precision,
-        int n_samples, int n_features, int n_nonzero, double bias)
+static struct feature_node **dense_to_sparse(double *x, int n_samples,
+        int n_features, int n_nonzero, double bias)
 {
-    float *x32 = (float *)x;
-    double *x64 = (double *)x;
     struct feature_node **sparse;
     int i, j;                           /* number of nonzero elements in row i */
     struct feature_node *T;             /* pointer to the top of the stack */
@@ -40,21 +38,12 @@ static struct feature_node **dense_to_sparse(char *x, int double_precision,
         sparse[i] = T;
 
         for (j=1; j<=n_features; ++j) {
-            if (double_precision) {
-                if (*x64 != 0) {
-                    T->value = *x64;
-                    T->index = j;
-                    ++ T;
-                }
-                ++ x64; /* go to next element */
-            } else {
-                if (*x32 != 0) {
-                    T->value = *x32;
-                    T->index = j;
-                    ++ T;
-                }
-                ++ x32; /* go to next element */
+            if (*x != 0) {
+                T->value = *x;
+                T->index = j;
+                ++ T;
             }
+            ++ x; /* go to next element */
         }
 
         /* set bias element */
@@ -74,14 +63,11 @@ static struct feature_node **dense_to_sparse(char *x, int double_precision,
 
 
 /*
- * Convert scipy.sparse.csr to liblinear's sparse data structure
+ * Convert scipy.sparse.csr to libsvm's sparse data structure
  */
-static struct feature_node **csr_to_sparse(char *x, int double_precision,
-        int *indices, int *indptr, int n_samples, int n_features, int n_nonzero,
-        double bias)
+static struct feature_node **csr_to_sparse(double *values, int *indices,
+        int *indptr, int n_samples, int n_features, int n_nonzero, double bias)
 {
-    float *x32 = (float *)x;
-    double *x64 = (double *)x;
     struct feature_node **sparse;
     int i, j=0, k=0, n;
     struct feature_node *T;
@@ -103,8 +89,8 @@ static struct feature_node **csr_to_sparse(char *x, int double_precision,
         n = indptr[i+1] - indptr[i]; /* count elements in row i */
 
         for (j=0; j<n; ++j) {
-            T->value = double_precision ? x64[k] : x32[k];
-            T->index = indices[k] + 1; /* liblinear uses 1-based indexing */
+            T->value = values[k];
+            T->index = indices[k] + 1; /* libsvm uses 1-based indexing */
             ++T;
             ++k;
         }
@@ -124,22 +110,26 @@ static struct feature_node **csr_to_sparse(char *x, int double_precision,
     return sparse;
 }
 
-struct problem * set_problem(char *X, int double_precision_X, int n_samples,
-        int n_features, int n_nonzero, double bias, char* sample_weight,
-        char *Y)
+struct problem * set_problem(char *X, char *Y, int n_samples, int n_features,
+        int n_nonzero, double bias, char* sample_weight)
 {
     struct problem *problem;
     /* not performant but simple */
     problem = malloc(sizeof(struct problem));
     if (problem == NULL) return NULL;
     problem->l = n_samples;
-    problem->n = n_features + (bias > 0);
-    problem->y = (double *) Y;
-    problem->W = (double *) sample_weight;
-    problem->x = dense_to_sparse(X, double_precision_X, n_samples, n_features,
-                        n_nonzero, bias);
-    problem->bias = bias;
 
+    if (bias > 0) {
+        problem->n = (int) n_features + 1;
+    } else {
+        problem->n = (int) n_features;
+    }
+
+    problem->y = (double *) Y;
+    problem->sample_weight = (double *) sample_weight;
+    problem->x = dense_to_sparse((double *) X, n_samples, n_features, n_nonzero, bias);
+    problem->bias = bias;
+    problem->sample_weight = sample_weight;
     if (problem->x == NULL) { 
         free(problem);
         return NULL;
@@ -148,20 +138,27 @@ struct problem * set_problem(char *X, int double_precision_X, int n_samples,
     return problem;
 }
 
-struct problem * csr_set_problem (char *X, int double_precision_X,
-        char *indices, char *indptr, int n_samples, int n_features,
-        int n_nonzero, double bias, char *sample_weight, char *Y)
-{
+struct problem * csr_set_problem (char *values, char *indices, char *indptr,
+        char *Y, int n_samples, int n_features, int n_nonzero, double bias,
+        char *sample_weight) {
+
     struct problem *problem;
     problem = malloc (sizeof (struct problem));
     if (problem == NULL) return NULL;
     problem->l = n_samples;
-    problem->n = n_features + (bias > 0);
+    problem->sample_weight = (double *) sample_weight;
+
+    if (bias > 0){
+        problem->n = (int) n_features + 1;
+    } else {
+        problem->n = (int) n_features;
+    }
+
     problem->y = (double *) Y;
-    problem->W = (double *) sample_weight;
-    problem->x = csr_to_sparse(X, double_precision_X, (int *) indices,
+    problem->x = csr_to_sparse((double *) values, (int *) indices,
                         (int *) indptr, n_samples, n_features, n_nonzero, bias);
     problem->bias = bias;
+    problem->sample_weight = sample_weight;
 
     if (problem->x == NULL) {
         free(problem);
@@ -172,7 +169,7 @@ struct problem * csr_set_problem (char *X, int double_precision_X,
 }
 
 
-/* Create a parameter struct with and return it */
+/* Create a paramater struct with and return it */
 struct parameter *set_parameter(int solver_type, double eps, double C,
                                 npy_intp nr_weight, char *weight_label,
                                 char *weight, int max_iter, unsigned seed, 

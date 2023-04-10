@@ -1,9 +1,9 @@
 import warnings
 import numpy as np
 
-from ._base import _fit_liblinear, BaseSVC, BaseLibSVM
+from .base import _fit_liblinear, BaseSVC, BaseLibSVM
 from ..base import BaseEstimator, RegressorMixin, OutlierMixin
-from ..linear_model._base import LinearClassifierMixin, SparseCoefMixin, \
+from ..linear_model.base import LinearClassifierMixin, SparseCoefMixin, \
     LinearModel
 from ..utils import check_X_y
 from ..utils.validation import _num_samples
@@ -26,12 +26,12 @@ class LinearSVC(BaseEstimator, LinearClassifierMixin,
 
     Parameters
     ----------
-    penalty : str, 'l1' or 'l2' (default='l2')
+    penalty : string, 'l1' or 'l2' (default='l2')
         Specifies the norm used in the penalization. The 'l2'
         penalty is the standard used in SVC. The 'l1' leads to ``coef_``
         vectors that are sparse.
 
-    loss : str, 'hinge' or 'squared_hinge' (default='squared_hinge')
+    loss : string, 'hinge' or 'squared_hinge' (default='squared_hinge')
         Specifies the loss function. 'hinge' is the standard SVM loss
         (used e.g. by the SVC class) while 'squared_hinge' is the
         square of the hinge loss.
@@ -44,10 +44,9 @@ class LinearSVC(BaseEstimator, LinearClassifierMixin,
         Tolerance for stopping criteria.
 
     C : float, optional (default=1.0)
-        Regularization parameter. The strength of the regularization is
-        inversely proportional to C. Must be strictly positive.
+        Penalty parameter C of the error term.
 
-    multi_class : str, 'ovr' or 'crammer_singer' (default='ovr')
+    multi_class : string, 'ovr' or 'crammer_singer' (default='ovr')
         Determines the multi-class strategy if `y` contains more than
         two classes.
         ``"ovr"`` trains n_classes one-vs-rest classifiers, while
@@ -58,7 +57,7 @@ class LinearSVC(BaseEstimator, LinearClassifierMixin,
         If ``"crammer_singer"`` is chosen, the options loss, penalty and dual
         will be ignored.
 
-    fit_intercept : bool, optional (default=True)
+    fit_intercept : boolean, optional (default=True)
         Whether to calculate the intercept for this model. If set
         to false, no intercept will be used in calculations
         (i.e. data is expected to be already centered).
@@ -80,7 +79,7 @@ class LinearSVC(BaseEstimator, LinearClassifierMixin,
         weight one.
         The "balanced" mode uses the values of y to automatically adjust
         weights inversely proportional to class frequencies in the input data
-        as ``n_samples / (n_classes * np.bincount(y))``.
+        as ``n_samples / (n_classes * np.bincount(y))``
 
     verbose : int, (default=0)
         Enable verbose output. Note that this setting takes advantage of a
@@ -113,32 +112,26 @@ else [n_classes, n_features]
     intercept_ : array, shape = [1] if n_classes == 2 else [n_classes]
         Constants in decision function.
 
-    classes_ : array of shape (n_classes,)
+    classes_ : array of shape = (n_classes,)
         The unique classes labels.
 
     n_iter_ : int
         Maximum number of iterations run across all classes.
 
-    See Also
+    Examples
     --------
-    SVC
-        Implementation of Support Vector Machine classifier using libsvm:
-        the kernel can be non-linear but its SMO algorithm does not
-        scale to large number of samples as LinearSVC does.
-
-        Furthermore SVC multi-class mode is implemented using one
-        vs one scheme while LinearSVC uses one vs the rest. It is
-        possible to implement one vs the rest with SVC by using the
-        :class:`sklearn.multiclass.OneVsRestClassifier` wrapper.
-
-        Finally SVC can fit dense data without memory copy if the input
-        is C-contiguous. Sparse data will still incur memory copy though.
-
-    sklearn.linear_model.SGDClassifier
-        SGDClassifier can optimize the same cost function as LinearSVC
-        by adjusting the penalty and loss parameters. In addition it requires
-        less memory, allows incremental (online) learning, and implements
-        various loss functions and regularization regimes.
+    >>> from sklearn.svm import LinearSVC
+    >>> from sklearn.datasets import make_classification
+    >>> X, y = make_classification(n_features=4, random_state=0)
+    >>> clf = LinearSVC(random_state=0, tol=1e-5)
+    >>> clf.fit(X, y)
+    LinearSVC(random_state=0, tol=1e-05)
+    >>> print(clf.coef_)
+    [[0.085... 0.394... 0.498... 0.375...]]
+    >>> print(clf.intercept_)
+    [0.284...]
+    >>> print(clf.predict([[0, 0, 0, 0]]))
+    [1]
 
     Notes
     -----
@@ -159,20 +152,27 @@ else [n_classes, n_features]
     `LIBLINEAR: A Library for Large Linear Classification
     <https://www.csie.ntu.edu.tw/~cjlin/liblinear/>`__
 
-    Examples
+    See also
     --------
-    >>> from sklearn.svm import LinearSVC
-    >>> from sklearn.datasets import make_classification
-    >>> X, y = make_classification(n_features=4, random_state=0)
-    >>> clf = LinearSVC(random_state=0, tol=1e-5)
-    >>> clf.fit(X, y)
-    LinearSVC(random_state=0, tol=1e-05)
-    >>> print(clf.coef_)
-    [[0.085... 0.394... 0.498... 0.375...]]
-    >>> print(clf.intercept_)
-    [0.284...]
-    >>> print(clf.predict([[0, 0, 0, 0]]))
-    [1]
+    SVC
+        Implementation of Support Vector Machine classifier using libsvm:
+        the kernel can be non-linear but its SMO algorithm does not
+        scale to large number of samples as LinearSVC does.
+
+        Furthermore SVC multi-class mode is implemented using one
+        vs one scheme while LinearSVC uses one vs the rest. It is
+        possible to implement one vs the rest with SVC by using the
+        :class:`sklearn.multiclass.OneVsRestClassifier` wrapper.
+
+        Finally SVC can fit dense data without memory copy if the input
+        is C-contiguous. Sparse data will still incur memory copy though.
+
+    sklearn.linear_model.SGDClassifier
+        SGDClassifier can optimize the same cost function as LinearSVC
+        by adjusting the penalty and loss parameters. In addition it requires
+        less memory, allows incremental (online) learning, and implements
+        various loss functions and regularization regimes.
+
     """
 
     def __init__(self, penalty='l2', loss='squared_hinge', dual=True, tol=1e-4,
@@ -197,14 +197,14 @@ else [n_classes, n_features]
 
         Parameters
         ----------
-        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+        X : {array-like, sparse matrix}, shape = [n_samples, n_features]
             Training vector, where n_samples in the number of samples and
             n_features is the number of features.
 
-        y : array-like of shape (n_samples,)
-            Target vector relative to X.
+        y : array-like, shape = [n_samples]
+            Target vector relative to X
 
-        sample_weight : array-like of shape (n_samples,), default=None
+        sample_weight : array-like, shape = [n_samples], optional
             Array of weights that are assigned to individual
             samples. If not provided,
             then each sample is given unit weight.
@@ -212,7 +212,6 @@ else [n_classes, n_features]
         Returns
         -------
         self : object
-            An instance of the estimator.
         """
         # FIXME Remove l1/l2 support in 0.23 ----------------------------------
         msg = ("loss='%s' has been deprecated in favor of "
@@ -223,7 +222,7 @@ else [n_classes, n_features]
             old_loss = self.loss
             self.loss = {'l1': 'hinge', 'l2': 'squared_hinge'}.get(self.loss)
             warnings.warn(msg % (old_loss, self.loss, old_loss, '0.23'),
-                          FutureWarning)
+                          DeprecationWarning)
         # ---------------------------------------------------------------------
 
         if self.C < 0:
@@ -251,7 +250,7 @@ else [n_classes, n_features]
         return self
 
 
-class LinearSVR(RegressorMixin, LinearModel):
+class LinearSVR(LinearModel, RegressorMixin):
     """Linear Support Vector Regression.
 
     Similar to SVR with parameter kernel='linear', but implemented in terms of
@@ -262,8 +261,6 @@ class LinearSVR(RegressorMixin, LinearModel):
     This class supports both dense and sparse input.
 
     Read more in the :ref:`User Guide <svm_regression>`.
-
-    .. versionadded:: 0.16
 
     Parameters
     ----------
@@ -276,8 +273,8 @@ class LinearSVR(RegressorMixin, LinearModel):
         Tolerance for stopping criteria.
 
     C : float, optional (default=1.0)
-        Regularization parameter. The strength of the regularization is
-        inversely proportional to C. Must be strictly positive.
+        Penalty parameter C of the error term. The penalty is a squared
+        l2 penalty. The bigger this parameter, the less regularization is used.
 
     loss : string, optional (default='epsilon_insensitive')
         Specifies the loss function. The epsilon-insensitive loss
@@ -387,14 +384,14 @@ class LinearSVR(RegressorMixin, LinearModel):
 
         Parameters
         ----------
-        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+        X : {array-like, sparse matrix}, shape = [n_samples, n_features]
             Training vector, where n_samples in the number of samples and
             n_features is the number of features.
 
-        y : array-like of shape (n_samples,)
+        y : array-like, shape = [n_samples]
             Target vector relative to X
 
-        sample_weight : array-like of shape (n_samples,), default=None
+        sample_weight : array-like, shape = [n_samples], optional
             Array of weights that are assigned to individual
             samples. If not provided,
             then each sample is given unit weight.
@@ -414,7 +411,7 @@ class LinearSVR(RegressorMixin, LinearModel):
                          'l2': 'squared_epsilon_insensitive'
                          }.get(self.loss)
             warnings.warn(msg % (old_loss, self.loss, old_loss, '0.23'),
-                          FutureWarning)
+                          DeprecationWarning)
         # ---------------------------------------------------------------------
 
         if self.C < 0:
@@ -441,7 +438,7 @@ class SVC(BaseSVC):
     The implementation is based on libsvm. The fit time scales at least
     quadratically with the number of samples and may be impractical
     beyond tens of thousands of samples. For large datasets
-    consider using :class:`sklearn.svm.LinearSVC` or
+    consider using :class:`sklearn.linear_model.LinearSVC` or
     :class:`sklearn.linear_model.SGDClassifier` instead, possibly after a
     :class:`sklearn.kernel_approximation.Nystroem` transformer.
 
@@ -457,9 +454,7 @@ class SVC(BaseSVC):
     Parameters
     ----------
     C : float, optional (default=1.0)
-        Regularization parameter. The strength of the regularization is
-        inversely proportional to C. Must be strictly positive. The penalty
-        is a squared l2 penalty.
+        Penalty parameter C of the error term.
 
     kernel : string, optional (default='rbf')
         Specifies the kernel type to be used in the algorithm.
@@ -492,9 +487,7 @@ class SVC(BaseSVC):
 
     probability : boolean, optional (default=False)
         Whether to enable probability estimates. This must be enabled prior
-        to calling `fit`, will slow down that method as it internally uses
-        5-fold cross-validation, and `predict_proba` may be inconsistent with
-        `predict`. Read more in the :ref:`User Guide <scores_probabilities>`.
+        to calling `fit`, and will slow down that method.
 
     tol : float, optional (default=1e-3)
         Tolerance for stopping criterion.
@@ -552,10 +545,10 @@ class SVC(BaseSVC):
 
     Attributes
     ----------
-    support_ : array-like of shape (n_SV)
+    support_ : array-like, shape = [n_SV]
         Indices of support vectors.
 
-    support_vectors_ : array-like of shape (n_SV, n_features)
+    support_vectors_ : array-like, shape = [n_SV, n_features]
         Support vectors.
 
     n_support_ : array-like, dtype=int32, shape = [n_class]
@@ -575,32 +568,25 @@ class SVC(BaseSVC):
         `coef_` is a readonly property derived from `dual_coef_` and
         `support_vectors_`.
 
-    intercept_ : ndarray of shape (n_class * (n_class-1) / 2,)
+    intercept_ : array, shape = [n_class * (n_class-1) / 2]
         Constants in decision function.
 
     fit_status_ : int
         0 if correctly fitted, 1 otherwise (will raise warning)
 
-    classes_ : array of shape (n_classes,)
+    classes_ : array of shape = [n_classes]
         The classes labels.
 
     probA_ : array, shape = [n_class * (n_class-1) / 2]
     probB_ : array, shape = [n_class * (n_class-1) / 2]
-        If `probability=True`, it corresponds to the parameters learned in
-        Platt scaling to produce probability estimates from decision values.
-        If `probability=False`, it's an empty array. Platt scaling uses the
-        logistic function
+        If probability=True, the parameters learned in Platt scaling to
+        produce probability estimates from decision values. If
+        probability=False, an empty array. Platt scaling uses the logistic
+        function
         ``1 / (1 + exp(decision_value * probA_ + probB_))``
         where ``probA_`` and ``probB_`` are learned from the dataset [2]_. For
         more information on the multiclass case and training procedure see
         section 8 of [1]_.
-
-    class_weight_ : ndarray of shape (n_class,)
-        Multipliers of parameter C for each class.
-        Computed based on the ``class_weight`` parameter.
-
-    shape_fit_ : tuple of int of shape (n_dimensions_of_X,)
-        Array dimensions of training vector ``X``.
 
     Examples
     --------
@@ -700,9 +686,7 @@ class NuSVC(BaseSVC):
 
     probability : boolean, optional (default=False)
         Whether to enable probability estimates. This must be enabled prior
-        to calling `fit`, will slow down that method as it internally uses
-        5-fold cross-validation, and `predict_proba` may be inconsistent with
-        `predict`. Read more in the :ref:`User Guide <scores_probabilities>`.
+        to calling `fit`, and will slow down that method.
 
     tol : float, optional (default=1e-3)
         Tolerance for stopping criterion.
@@ -758,10 +742,10 @@ class NuSVC(BaseSVC):
 
     Attributes
     ----------
-    support_ : array-like of shape (n_SV)
+    support_ : array-like, shape = [n_SV]
         Indices of support vectors.
 
-    support_vectors_ : array-like of shape (n_SV, n_features)
+    support_vectors_ : array-like, shape = [n_SV, n_features]
         Support vectors.
 
     n_support_ : array-like, dtype=int32, shape = [n_class]
@@ -781,32 +765,11 @@ class NuSVC(BaseSVC):
         `coef_` is readonly property derived from `dual_coef_` and
         `support_vectors_`.
 
-    intercept_ : ndarray of shape (n_class * (n_class-1) / 2,)
+    intercept_ : array, shape = [n_class * (n_class-1) / 2]
         Constants in decision function.
 
-    classes_ : array of shape (n_classes,)
+    classes_ : array of shape = (n_classes,)
         The unique classes labels.
-
-    fit_status_ : int
-        0 if correctly fitted, 1 if the algorithm did not converge.
-
-    probA_ : ndarray, shape of (n_class * (n_class-1) / 2,)
-    probB_ : ndarray of shape (n_class * (n_class-1) / 2,)
-        If `probability=True`, it corresponds to the parameters learned in
-        Platt scaling to produce probability estimates from decision values.
-        If `probability=False`, it's an empty array. Platt scaling uses the
-        logistic function
-        ``1 / (1 + exp(decision_value * probA_ + probB_))``
-        where ``probA_`` and ``probB_`` are learned from the dataset [2]_. For
-        more information on the multiclass case and training procedure see
-        section 8 of [1]_.
-
-    class_weight_ : ndarray of shape (n_class,)
-        Multipliers of parameter C of each class.
-        Computed based on the ``class_weight`` parameter.
-
-    shape_fit_ : tuple of int of shape (n_dimensions_of_X,)
-        Array dimensions of training vector ``X``.
 
     Examples
     --------
@@ -829,14 +792,11 @@ class NuSVC(BaseSVC):
         Scalable linear Support Vector Machine for classification using
         liblinear.
 
-    References
-    ----------
-    .. [1] `LIBSVM: A Library for Support Vector Machines
-        <http://www.csie.ntu.edu.tw/~cjlin/papers/libsvm.pdf>`_
-
-    .. [2] `Platt, John (1999). "Probabilistic outputs for support vector
-        machines and comparison to regularizedlikelihood methods."
-        <http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.41.1639>`_
+    Notes
+    -----
+    **References:**
+    `LIBSVM: A Library for Support Vector Machines
+    <http://www.csie.ntu.edu.tw/~cjlin/papers/libsvm.pdf>`__
     """
 
     _impl = 'nu_svc'
@@ -857,7 +817,7 @@ class NuSVC(BaseSVC):
             random_state=random_state)
 
 
-class SVR(RegressorMixin, BaseLibSVM):
+class SVR(BaseLibSVM, RegressorMixin):
     """Epsilon-Support Vector Regression.
 
     The free parameters in the model are C and epsilon.
@@ -865,7 +825,7 @@ class SVR(RegressorMixin, BaseLibSVM):
     The implementation is based on libsvm. The fit time complexity
     is more than quadratic with the number of samples which makes it hard
     to scale to datasets with more than a couple of 10000 samples. For large
-    datasets consider using :class:`sklearn.svm.LinearSVR` or
+    datasets consider using :class:`sklearn.linear_model.LinearSVR` or
     :class:`sklearn.linear_model.SGDRegressor` instead, possibly after a
     :class:`sklearn.kernel_approximation.Nystroem` transformer.
 
@@ -902,9 +862,7 @@ class SVR(RegressorMixin, BaseLibSVM):
         Tolerance for stopping criterion.
 
     C : float, optional (default=1.0)
-        Regularization parameter. The strength of the regularization is
-        inversely proportional to C. Must be strictly positive.
-        The penalty is a squared l2 penalty.
+        Penalty parameter C of the error term.
 
     epsilon : float, optional (default=0.1)
          Epsilon in the epsilon-SVR model. It specifies the epsilon-tube
@@ -928,10 +886,10 @@ class SVR(RegressorMixin, BaseLibSVM):
 
     Attributes
     ----------
-    support_ : array-like of shape (n_SV)
+    support_ : array-like, shape = [n_SV]
         Indices of support vectors.
 
-    support_vectors_ : array-like of shape (n_SV, n_features)
+    support_vectors_ : array-like, shape = [nSV, n_features]
         Support vectors.
 
     dual_coef_ : array, shape = [1, n_SV]
@@ -943,9 +901,6 @@ class SVR(RegressorMixin, BaseLibSVM):
 
         `coef_` is readonly property derived from `dual_coef_` and
         `support_vectors_`.
-
-    fit_status_ : int
-        0 if correctly fitted, 1 otherwise (will raise warning)
 
     intercept_ : array, shape = [1]
         Constants in decision function.
@@ -992,7 +947,7 @@ class SVR(RegressorMixin, BaseLibSVM):
             class_weight=None, max_iter=max_iter, random_state=None)
 
 
-class NuSVR(RegressorMixin, BaseLibSVM):
+class NuSVR(BaseLibSVM, RegressorMixin):
     """Nu Support Vector Regression.
 
     Similar to NuSVC, for regression, uses a parameter nu to control
@@ -1057,10 +1012,10 @@ class NuSVR(RegressorMixin, BaseLibSVM):
 
     Attributes
     ----------
-    support_ : array-like of shape (n_SV)
+    support_ : array-like, shape = [n_SV]
         Indices of support vectors.
 
-    support_vectors_ : array-like of shape (n_SV, n_features)
+    support_vectors_ : array-like, shape = [nSV, n_features]
         Support vectors.
 
     dual_coef_ : array, shape = [1, n_SV]
@@ -1117,7 +1072,7 @@ class NuSVR(RegressorMixin, BaseLibSVM):
             verbose=verbose, max_iter=max_iter, random_state=None)
 
 
-class OneClassSVM(OutlierMixin, BaseLibSVM):
+class OneClassSVM(BaseLibSVM, OutlierMixin):
     """Unsupervised Outlier Detection.
 
     Estimate the support of a high-dimensional distribution.
@@ -1178,10 +1133,10 @@ class OneClassSVM(OutlierMixin, BaseLibSVM):
 
     Attributes
     ----------
-    support_ : array-like of shape (n_SV)
+    support_ : array-like, shape = [n_SV]
         Indices of support vectors.
 
-    support_vectors_ : array-like of shape (n_SV, n_features)
+    support_vectors_ : array-like, shape = [nSV, n_features]
         Support vectors.
 
     dual_coef_ : array, shape = [1, n_SV]
@@ -1202,9 +1157,6 @@ class OneClassSVM(OutlierMixin, BaseLibSVM):
         We have the relation: decision_function = score_samples - `offset_`.
         The offset is the opposite of `intercept_` and is provided for
         consistency with other outlier detection algorithms.
-
-    fit_status_ : int
-        0 if correctly fitted, 1 otherwise (will raise warning)
 
     Examples
     --------
