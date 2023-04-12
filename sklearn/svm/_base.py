@@ -171,11 +171,11 @@ class BaseLibSVM(BaseEstimator, metaclass=ABCMeta):
         if isinstance(self.gamma, str):
             if self.gamma == 'scale':
                 # var = E[X^2] - E[X]^2 if sparse
-                X_var = ((X[samples][:,feature_weight].multiply(X[samples,feature_weight])).mean() - (X[samples,feature_weight].mean()) ** 2
+                X_var = ((X.multiply(X)).mean() - (X.mean()) ** 2
                          if sparse else X.var())
-                self._gamma = 1.0 / (X[samples][:,feature_weight].shape[1] * X_var) if X_var != 0 else 1.0
+                self._gamma = 1.0 / (X.shape[1] * X_var) if X_var != 0 else 1.0
             elif self.gamma == 'auto':
-                self._gamma = 1.0 / X[samples][:,feature_weight].shape[1]
+                self._gamma = 1.0 / X.shape[1]
             else:
                 raise ValueError(
                     "When 'gamma' is a string, it should be either 'scale' or "
