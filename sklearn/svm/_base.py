@@ -342,11 +342,14 @@ class BaseLibSVM(BaseEstimator, metaclass=ABCMeta):
 
         C = 0.0  # C is not useful here
 
+        X_support = X_[self.support_]
+        X_support.sort_indices()
+
         return libsvm_sparse.libsvm_sparse_predict(
             X.data, X.indices, X.indptr,
-            np.asarray(X_[self.support_].data, dtype=np.float64, order='C'),
-            X_[self.support_].indices,
-            X_[self.support_].indptr,
+            np.asarray(X_support.data, dtype=np.float64, order='C'),
+            X_support.indices,
+            X_support.indptr,
             self._dual_coef_.data, self._intercept_,
             LIBSVM_IMPL.index(self._impl), kernel_type,
             self.degree, self._gamma, self.coef0, self.tol,
