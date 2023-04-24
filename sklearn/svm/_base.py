@@ -113,6 +113,12 @@ class BaseLibSVM(BaseEstimator, metaclass=ABCMeta):
             and n_features is the number of features.
             For kernel="precomputed", the expected shape of X is
             (n_samples, n_samples).
+            
+        feature_weight : array-like, shape (n_features,)
+            Indexes of the features that should be considered during training.
+        
+        samples : array-like, shape (n_samples,)
+            Indexes of the samples that sjould be considered during training.
 
         y : array-like, shape (n_samples,)
             Target values (class labels in classification, real numbers in
@@ -301,7 +307,10 @@ class BaseLibSVM(BaseEstimator, metaclass=ABCMeta):
         X : {array-like, sparse matrix}, shape (n_samples, n_features)
             For kernel="precomputed", the expected shape of X is
             (n_samples_test, n_samples_train).
-
+            
+        X_ : {array-like, sparse matrix}, shape (n_samples, n_features)
+            original training dataset.
+            
         Returns
         -------
         y_pred : array, shape (n_samples,)
@@ -369,7 +378,7 @@ class BaseLibSVM(BaseEstimator, metaclass=ABCMeta):
             X = np.asarray(kernel, dtype=np.float64, order='C')
         return X
 
-    def _decision_function(self, X):
+    def _decision_function(self, X, X_):
         """Evaluates the decision function for the samples in X.
 
         Parameters
@@ -388,9 +397,9 @@ class BaseLibSVM(BaseEstimator, metaclass=ABCMeta):
         X = self._compute_kernel(X)
 
         if self._sparse:
-            dec_func = self._sparse_decision_function(X)
+            dec_func = self._sparse_decision_function(X, X_)
         else:
-            dec_func = self._dense_decision_function(X)
+            dec_func = self._dense_decision_function(X, X_)
 
         # In binary case, we need to flip the sign of coef, intercept and
         # decision function.
@@ -399,7 +408,7 @@ class BaseLibSVM(BaseEstimator, metaclass=ABCMeta):
 
         return dec_func
 
-    def _dense_decision_function(self, X):
+    def _dense_decision_function(self, X, X_):
         X = check_array(X, dtype=np.float64, order="C",
                         accept_large_sparse=False)
 
@@ -408,14 +417,14 @@ class BaseLibSVM(BaseEstimator, metaclass=ABCMeta):
             kernel = 'precomputed'
 
         return libsvm.decision_function(
-            X, self.support_, self.support_vectors_, self.n_support_,
+            X, self.support_, X_[self.support_], self.n_support_,
             self._dual_coef_, self._intercept_,
             self.probA_, self.probB_,
             svm_type=LIBSVM_IMPL.index(self._impl),
             kernel=kernel, degree=self.degree, cache_size=self.cache_size,
             coef0=self.coef0, gamma=self._gamma)
 
-    def _sparse_decision_function(self, X):
+    def _sparse_decision_function(self, X, X_):
         X.data = np.asarray(X.data, dtype=np.float64, order='C')
 
         kernel = self.kernel
@@ -423,12 +432,15 @@ class BaseLibSVM(BaseEstimator, metaclass=ABCMeta):
             kernel = 'precomputed'
 
         kernel_type = self._sparse_kernels.index(kernel)
+        
+        X_support = X_[self.support_]
+        X_support.sort_indices()
 
         return libsvm_sparse.libsvm_sparse_decision_function(
             X.data, X.indices, X.indptr,
-            self.support_vectors_.data,
-            self.support_vectors_.indices,
-            self.support_vectors_.indptr,
+            np.asarray(X_support.data, dtype=np.float64, order='C'),
+            X_support.indices,
+            X_support.indptr,
             self._dual_coef_.data, self._intercept_,
             LIBSVM_IMPL.index(self._impl), kernel_type,
             self.degree, self._gamma, self.coef0, self.tol,
@@ -516,7 +528,7 @@ class BaseSVC(BaseLibSVM, ClassifierMixin, metaclass=ABCMeta):
 
         return np.asarray(y, dtype=np.float64, order='C')
 
-    def decision_function(self, X):
+    def decision_function(self, X, X_):
         """Evaluates the decision function for the samples in X.
 
         Parameters
@@ -542,7 +554,7 @@ class BaseSVC(BaseLibSVM, ClassifierMixin, metaclass=ABCMeta):
         If decision_function_shape='ovr', the decision function is a monotonic
         transformation of ovo decision function.
         """
-        dec = self._decision_function(X)
+        dec = self._decision_function(X, X_)
         if self.decision_function_shape == 'ovr' and len(self.classes_) > 2:
             return _ovr_decision_function(dec < 0, -dec, len(self.classes_))
         return dec
@@ -557,6 +569,9 @@ class BaseSVC(BaseLibSVM, ClassifierMixin, metaclass=ABCMeta):
         X : {array-like, sparse matrix}, shape (n_samples, n_features)
             For kernel="precomputed", the expected shape of X is
             [n_samples_test, n_samples_train]
+            
+        X_ : {array-like, sparse matrix}, shape (n_samples, n_features)
+            Original training dataset.            
 
         Returns
         -------
@@ -571,7 +586,7 @@ class BaseSVC(BaseLibSVM, ClassifierMixin, metaclass=ABCMeta):
         if (self.break_ties
                 and self.decision_function_shape == 'ovr'
                 and len(self.classes_) > 2):
-            y = np.argmax(self.decision_function(X), axis=1)
+            y = np.argmax(self.decision_function(X, X_), axis=1)
         else:
             y = super().predict(X,X_)
         return self.classes_.take(np.asarray(y, dtype=np.intp))
@@ -618,14 +633,14 @@ class BaseSVC(BaseLibSVM, ClassifierMixin, metaclass=ABCMeta):
         self._check_proba()
         return self._predict_proba
 
-    def _predict_proba(self, X):
+    def _predict_proba(self, X, X_):
         X = self._validate_for_predict(X)
         if self.probA_.size == 0 or self.probB_.size == 0:
             raise NotFittedError("predict_proba is not available when fitted "
                                  "with probability=False")
         pred_proba = (self._sparse_predict_proba
                       if self._sparse else self._dense_predict_proba)
-        return pred_proba(X)
+        return pred_proba(X, X_)
 
     @property
     def predict_log_proba(self):
@@ -657,10 +672,10 @@ class BaseSVC(BaseLibSVM, ClassifierMixin, metaclass=ABCMeta):
         self._check_proba()
         return self._predict_log_proba
 
-    def _predict_log_proba(self, X):
-        return np.log(self.predict_proba(X))
+    def _predict_log_proba(self, X, X_):
+        return np.log(self.predict_proba(X, X_))
 
-    def _dense_predict_proba(self, X):
+    def _dense_predict_proba(self, X, X_):
         X = self._compute_kernel(X)
 
         kernel = self.kernel
@@ -669,7 +684,7 @@ class BaseSVC(BaseLibSVM, ClassifierMixin, metaclass=ABCMeta):
 
         svm_type = LIBSVM_IMPL.index(self._impl)
         pprob = libsvm.predict_proba(
-            X, self.support_, self.support_vectors_, self.n_support_,
+            X, self.support_, X_[self.support_], self.n_support_,
             self._dual_coef_, self._intercept_,
             self.probA_, self.probB_,
             svm_type=svm_type, kernel=kernel, degree=self.degree,
@@ -677,7 +692,7 @@ class BaseSVC(BaseLibSVM, ClassifierMixin, metaclass=ABCMeta):
 
         return pprob
 
-    def _sparse_predict_proba(self, X):
+    def _sparse_predict_proba(self, X, X_):
         X.data = np.asarray(X.data, dtype=np.float64, order='C')
 
         kernel = self.kernel
@@ -685,12 +700,15 @@ class BaseSVC(BaseLibSVM, ClassifierMixin, metaclass=ABCMeta):
             kernel = 'precomputed'
 
         kernel_type = self._sparse_kernels.index(kernel)
-
+        
+        X_support = X_[self.support_]
+        X_support.sort_indices()
+    
         return libsvm_sparse.libsvm_sparse_predict_proba(
             X.data, X.indices, X.indptr,
-            self.support_vectors_.data,
-            self.support_vectors_.indices,
-            self.support_vectors_.indptr,
+            np.asarray(X_support.data, dtype=np.float64, order='C'),
+            X_support.indices,
+            X_support.indptr,
             self._dual_coef_.data, self._intercept_,
             LIBSVM_IMPL.index(self._impl), kernel_type,
             self.degree, self._gamma, self.coef0, self.tol,
