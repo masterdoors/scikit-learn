@@ -10,7 +10,10 @@ Differences:
 
 *sample_weight - array of reals, it defines if a particular sample is considered in the SVM training process
 
-*samples - training data array (without labels).
+*samples - numbers of the training samples in the initial training data array.
+
+3. We have added the following parameters to the predict/predict_proba methods of the SVC class (LibSVM-based classifier):
+*X_ - initial training array (features only).
 
 These changes are made to simplify the use of the LinearSVC/SVC classifiers to train decision stamps in oblique or non-linear decision trees like: https://github.com/masterdoors/kernel_trees. 
 
