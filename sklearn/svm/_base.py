@@ -148,7 +148,7 @@ class BaseLibSVM(BaseEstimator, metaclass=ABCMeta):
             raise TypeError("Sparse precomputed kernels are not supported.")
         self._sparse = sparse and not callable(self.kernel)
 
-        X, y = check_X_y(X[samples][:,feature_weight].copy(), y, dtype=np.float64,
+        X, y = check_X_y(X[samples][:,feature_weight], y, dtype=np.float64,
                          order='C', accept_sparse='csr',
                          accept_large_sparse=False)
         y = self._validate_targets(y)
