@@ -214,13 +214,13 @@ def fit(
     copy_support (support.data, model)
 
     # copy model.SV
-    cdef np.ndarray[np.float64_t, ndim=2, mode='c'] support_vectors
-    if kernel_index == 4:
+    #cdef np.ndarray[np.float64_t, ndim=2, mode='c'] support_vectors
+    #if kernel_index == 4:
         # precomputed kernel
-        support_vectors = np.empty((0, 0), dtype=np.float64)
-    else:
-        support_vectors = np.empty((SV_len, X.shape[1]), dtype=np.float64)
-        copy_SV(support_vectors.data, model, support_vectors.shape)
+    #    support_vectors = np.empty((0, 0), dtype=np.float64)
+    #else:
+    #    support_vectors = np.empty((SV_len, X.shape[1]), dtype=np.float64)
+    #    copy_SV(support_vectors.data, model, support_vectors.shape)
 
     cdef np.ndarray[np.int32_t, ndim=1, mode='c'] n_class_SV
     if svm_type == 0 or svm_type == 1:
@@ -248,7 +248,7 @@ def fit(
     svm_free_and_destroy_model(&model)
     free(problem.x)
 
-    return (support, support_vectors, n_class_SV, sv_coef, intercept,
+    return (support,[], n_class_SV, sv_coef, intercept,
            probA, probB, fit_status)
 
 
