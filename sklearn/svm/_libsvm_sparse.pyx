@@ -209,7 +209,7 @@ def libsvm_sparse_train ( int n_features,
     free_problem(problem)
     free_param(param)
 
-    return (support, support_vectors_, sv_coef_data, intercept, n_class_SV,
+    return (support, [], sv_coef_data, intercept, n_class_SV,
             probA, probB, fit_status)
 
 
