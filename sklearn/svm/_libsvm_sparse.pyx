@@ -172,17 +172,17 @@ def libsvm_sparse_train ( int n_features,
     # copy model.SV
     # we erase any previous information in SV
     # TODO: custom kernel
-    cdef np.npy_intp nonzero_SV
-    nonzero_SV = get_nonzero_SV (model)
+    #cdef np.npy_intp nonzero_SV
+    #nonzero_SV = get_nonzero_SV (model)
 
-    cdef np.ndarray SV_data, SV_indices, SV_indptr
-    SV_data = np.empty(nonzero_SV, dtype=np.float64)
-    SV_indices = np.empty(nonzero_SV, dtype=np.int32)
-    SV_indptr = np.empty(<np.npy_intp>SV_len + 1, dtype=np.int32)
-    csr_copy_SV(SV_data.data, SV_indices.shape, SV_indices.data,
-                SV_indptr.shape, SV_indptr.data, model, n_features)
-    support_vectors_ = sparse.csr_matrix(
-	(SV_data, SV_indices, SV_indptr), (SV_len, n_features))
+    #cdef np.ndarray SV_data, SV_indices, SV_indptr
+    #SV_data = np.empty(nonzero_SV, dtype=np.float64)
+    #SV_indices = np.empty(nonzero_SV, dtype=np.int32)
+    #SV_indptr = np.empty(<np.npy_intp>SV_len + 1, dtype=np.int32)
+    #csr_copy_SV(SV_data.data, SV_indices.shape, SV_indices.data,
+    #            SV_indptr.shape, SV_indptr.data, model, n_features)
+    #support_vectors_ = sparse.csr_matrix(
+	#(SV_data, SV_indices, SV_indptr), (SV_len, n_features))
 
     # copy model.nSV
     # TODO: do only in classification
