@@ -2379,18 +2379,18 @@ PREFIX(model) *PREFIX(train)(const PREFIX(problem) *prob, const svm_parameter *p
 		for(i=0;i<prob->l;i++)
 			if(fabs(f.alpha[i]) > 0) ++nSV;
 		model->l = nSV;
-#ifdef _DENSE_REP
-		model->SV = Malloc(PREFIX(node),nSV);
-#else
-		model->SV = Malloc(PREFIX(node) *,nSV);
-#endif
+//#ifdef _DENSE_REP
+		//model->SV = Malloc(PREFIX(node),nSV);
+//#else
+		//model->SV = Malloc(PREFIX(node) *,nSV);
+//#endif
                 model->sv_ind = Malloc(int, nSV);
 		model->sv_coef[0] = Malloc(double, nSV);
 		int j = 0;
 		for(i=0;i<prob->l;i++)
 			if(fabs(f.alpha[i]) > 0)
 			{
-				model->SV[j] = prob->x[i];
+				//model->SV[j] = prob->x[i];
                                 model->sv_ind[j] = i;
 				model->sv_coef[0][j] = f.alpha[i];
 				++j;
@@ -2548,15 +2548,15 @@ PREFIX(model) *PREFIX(train)(const PREFIX(problem) *prob, const svm_parameter *p
 
 		model->l = total_sv;
                 model->sv_ind = Malloc(int, total_sv);
-#ifdef _DENSE_REP
-		model->SV = Malloc(PREFIX(node),total_sv);
-#else
-		model->SV = Malloc(PREFIX(node) *,total_sv);
-#endif
+//#ifdef _DENSE_REP
+//		model->SV = Malloc(PREFIX(node),total_sv);
+//#else
+//		model->SV = Malloc(PREFIX(node) *,total_sv);
+//#endif
 		p = 0;
 		for(i=0;i<l;i++) {
 			if(nonzero[i]) { 
-                                model->SV[p] = x[i];
+                                //model->SV[p] = x[i];
                                 model->sv_ind[p] = perm[i];
                                 ++p;
                         }
