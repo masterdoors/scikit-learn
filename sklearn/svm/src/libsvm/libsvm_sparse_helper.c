@@ -402,7 +402,9 @@ int free_model(struct svm_csr_model *model)
 {
     /* like svm_free_and_destroy_model, but does not free sv_coef[i] */
     if (model == NULL) return -1;
-    free(model->SV);
+    if (model->SV != NULL) 	
+        free(model->SV);
+	
     free(model->sv_coef);
     free(model->rho);
     free(model->label);
@@ -425,10 +427,13 @@ int free_param(struct svm_parameter *param)
 int free_model_SV(struct svm_csr_model *model)
 {
     int i;
-    for (i=model->l-1; i>=0; --i) free(model->SV[i]);
+    if (model->SV != NULL){
+        for (i=model->l-1; i>=0; --i) free(model->SV[i]);  
+    } 	   
     /* svn_destroy_model frees model->SV */
-    for (i=0; i < model->nr_class-1 ; ++i) free(model->sv_coef[i]);
+    for (i=0; i < model->nr_class-1 ; ++i) free( model->sv_coef[i]);
     /* svn_destroy_model frees model->sv_coef */
+    	    
     return 0;
 }
 
