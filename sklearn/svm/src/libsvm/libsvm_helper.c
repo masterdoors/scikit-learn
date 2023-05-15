@@ -184,7 +184,8 @@ struct svm_model *set_model(struct svm_parameter *param, int nr_class,
 probB_error:
     free(model->probA);
 probA_error:
-    free(model->SV);
+    if (model->SV != NULL)
+        free(model->SV);
 SV_error:
     free(model->rho);
 rho_error:
@@ -359,7 +360,8 @@ int free_model(struct svm_model *model)
 {
     /* like svm_free_and_destroy_model, but does not free sv_coef[i] */
     if (model == NULL) return -1;
-    free(model->SV);
+    if (model->SV != NULL)
+        free(model->SV);
 
     /* We don't free sv_ind, since we did not create them in
        set_model */
