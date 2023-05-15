@@ -2616,6 +2616,7 @@ PREFIX(model) *PREFIX(train)(const PREFIX(problem) *prob, const svm_parameter *p
 	free(newprob.y);
 	free(newprob.W);
 	model->free_sv = 0;
+	model->SV = NULL;
 	return model;
 }
 
@@ -2942,7 +2943,9 @@ void PREFIX(free_model_content)(PREFIX(model)* model_ptr)
 			free(model_ptr->sv_coef[i]);
 	}
 
-	free(model_ptr->SV);
+	if (model_ptr->SV != NULL)
+	    free(model_ptr->SV);
+	
 	model_ptr->SV = NULL;
 
 	free(model_ptr->sv_coef);
