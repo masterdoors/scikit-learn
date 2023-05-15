@@ -2615,7 +2615,6 @@ PREFIX(model) *PREFIX(train)(const PREFIX(problem) *prob, const svm_parameter *p
 	free(newprob.x);
 	free(newprob.y);
 	free(newprob.W);
-	free(model->SV);
 	return model;
 }
 
