@@ -262,7 +262,7 @@ def setup_package():
                     ],
                     package_data={'': ['*.pxd']},
                     **extra_setuptools_args)
-
+    metadata["packages"] = ["sklearn"] 
     if len(sys.argv) == 1 or (
             len(sys.argv) >= 2 and ('--help' in sys.argv[1:] or
                                     sys.argv[1] in ('--help-commands',
